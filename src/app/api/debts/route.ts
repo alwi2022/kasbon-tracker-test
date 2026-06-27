@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { calculateDebtSummary } from "@/lib/debts/business";
 import {
   createDebtSchema,
   listDebtsQuerySchema,
@@ -51,7 +52,18 @@ export async function GET(request: NextRequest) {
     return errorResponse("Gagal mengambil data kasbon.", 500);
   }
 
-  return NextResponse.json({ data });
+  const { data: summaryRows, error: summaryError } = await auth.supabase
+    .from("debts")
+    .select("type, amount, settled_at")
+    .eq("user_id", auth.user.id);
+
+  if (summaryError) {
+    return errorResponse("Gagal menghitung ringkasan kasbon.", 500);
+  }
+
+  const summary = calculateDebtSummary(summaryRows);
+
+  return NextResponse.json({ data, summary });
 }
 
 export async function POST(request: NextRequest) {
