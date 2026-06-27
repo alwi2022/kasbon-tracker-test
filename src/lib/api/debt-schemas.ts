@@ -3,6 +3,11 @@ import type { DebtType } from "@/types/database";
 
 export type DebtStatusFilter = "all" | "unsettled" | "settled";
 export type DebtTypeFilter = "all" | DebtType;
+export type DebtSortOption =
+  | "date_desc"
+  | "date_asc"
+  | "amount_desc"
+  | "amount_asc";
 
 const statusQueryValues = [
   "all",
@@ -20,6 +25,13 @@ const typeQueryValues = [
   "i_owe",
   "dihutang",
   "hutang",
+] as const;
+
+const sortQueryValues = [
+  "date_desc",
+  "date_asc",
+  "amount_desc",
+  "amount_asc",
 ] as const;
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -74,11 +86,23 @@ const debtTypeSchema = z.enum(["owed_to_me", "i_owe"], {
   error: "Tipe kasbon harus owed_to_me atau i_owe.",
 });
 
-const amountSchema = z.coerce
-  .number({ error: "Jumlah wajib berupa angka." })
-  .int("Jumlah harus angka Rupiah utuh.")
-  .positive("Jumlah harus lebih dari 0.")
-  .max(Number.MAX_SAFE_INTEGER, "Jumlah terlalu besar.");
+function normalizeAmountInput(value: unknown) {
+  if (typeof value === "string") {
+    return value.replace(/\./g, "");
+  }
+
+  return value;
+}
+
+const amountSchema = z
+  .preprocess(
+    normalizeAmountInput,
+    z.coerce
+      .number({ error: "Jumlah wajib berupa angka." })
+      .int("Jumlah harus angka Rupiah utuh.")
+      .positive("Jumlah harus lebih dari 0.")
+      .max(Number.MAX_SAFE_INTEGER, "Jumlah terlalu besar."),
+  );
 
 const requiredNameSchema = z
   .string({ error: "Nama orang wajib diisi." })
@@ -128,6 +152,12 @@ const settledAtSchema = z
 
 export const listDebtsQuerySchema = z
   .object({
+    search: z
+      .preprocess(
+        emptyStringToUndefined,
+        z.string().trim().max(80, "Pencarian maksimal 80 karakter.").optional(),
+      )
+      .transform((value) => value || undefined),
     status: z
       .preprocess(
         emptyStringToUndefined,
@@ -144,6 +174,13 @@ export const listDebtsQuerySchema = z
         }).default("all"),
       )
       .transform(normalizeType),
+    sort: z
+      .preprocess(
+        emptyStringToUndefined,
+        z.enum(sortQueryValues, {
+          error: "Urutan data tidak valid.",
+        }).default("date_desc"),
+      ),
   })
   .strict();
 

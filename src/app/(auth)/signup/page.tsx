@@ -63,7 +63,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
 
         <p className="mt-5 text-center text-sm text-white/50">
           Sudah punya akun?{" "}
-          <Link className="font-medium text-[#ffb36c] underline" href="/login">
+          <Link className="font-medium text-white underline" href="/login">
             Masuk
           </Link>
         </p>

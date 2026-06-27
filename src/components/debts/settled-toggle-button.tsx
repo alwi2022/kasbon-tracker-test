@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle2, Undo2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -29,6 +30,7 @@ export function SettledToggleButton({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const Icon = isSettled ? Undo2 : CheckCircle2;
 
   async function handleToggle() {
     setError(null);
@@ -54,13 +56,14 @@ export function SettledToggleButton({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="w-full space-y-2 sm:w-auto">
       <button
         type="button"
         disabled={isPending}
         onClick={handleToggle}
-        className="rounded-md border border-[#ff8400]/30 px-3 py-2 text-sm font-medium text-[#ffb36c] transition hover:bg-[#ff8400]/10 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-medium text-white/80 transition hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
+        <Icon aria-hidden="true" size={15} />
         {isSettled ? "Batalkan lunas" : "Tandai lunas"}
       </button>
 

@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: AppLayoutProps) {
   return (
     <main className="min-h-screen bg-black text-white">
       <header className="border-b border-white/10 bg-black">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
             <BrandLogo size="sm" />
             <span className="text-sm font-semibold">Kasbon Tracker</span>
@@ -35,7 +35,9 @@ export default async function AppLayout({ children }: AppLayoutProps) {
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl px-4 py-6">{children}</div>
+      <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+        {children}
+      </div>
     </main>
   );
 }

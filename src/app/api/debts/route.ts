@@ -20,8 +20,13 @@ export async function GET(request: NextRequest) {
   }
 
   const parsedQuery = listDebtsQuerySchema.safeParse({
+    search:
+      request.nextUrl.searchParams.get("search") ??
+      request.nextUrl.searchParams.get("q") ??
+      undefined,
     status: request.nextUrl.searchParams.get("status") ?? undefined,
     type: request.nextUrl.searchParams.get("type") ?? undefined,
+    sort: request.nextUrl.searchParams.get("sort") ?? undefined,
   });
 
   if (!parsedQuery.success) {
@@ -31,11 +36,14 @@ export async function GET(request: NextRequest) {
   let query = auth.supabase
     .from("debts")
     .select("*")
-    .eq("user_id", auth.user.id)
-    .order("created_at", { ascending: false });
+    .eq("user_id", auth.user.id);
 
   if (parsedQuery.data.type !== "all") {
     query = query.eq("type", parsedQuery.data.type);
+  }
+
+  if (parsedQuery.data.search) {
+    query = query.ilike("counterpart_name", `%${parsedQuery.data.search}%`);
   }
 
   if (parsedQuery.data.status === "unsettled") {
@@ -44,6 +52,30 @@ export async function GET(request: NextRequest) {
 
   if (parsedQuery.data.status === "settled") {
     query = query.not("settled_at", "is", null);
+  }
+
+  if (parsedQuery.data.sort === "date_asc") {
+    query = query
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true });
+  }
+
+  if (parsedQuery.data.sort === "date_desc") {
+    query = query
+      .order("due_date", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
+  }
+
+  if (parsedQuery.data.sort === "amount_asc") {
+    query = query
+      .order("amount", { ascending: true })
+      .order("created_at", { ascending: false });
+  }
+
+  if (parsedQuery.data.sort === "amount_desc") {
+    query = query
+      .order("amount", { ascending: false })
+      .order("created_at", { ascending: false });
   }
 
   const { data, error } = await query;
